@@ -1,7 +1,7 @@
 import random
-from typing import Annotated
+from typing import Annotated, Any
 
-from fastapi import FastAPI, HTTPException, Header, Path, status
+from fastapi import FastAPI, Header, HTTPException, Path, status
 
 import store
 from document import Document, DocumentId
@@ -9,7 +9,7 @@ from document import Document, DocumentId
 app = FastAPI()
 
 
-def base62Id(n: int):
+def base62Id(n: int) -> str:
     chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
     return "".join([random.choice(chars) for _ in range(n)])
 
@@ -24,18 +24,18 @@ async def create_document(x_user_id: Annotated[int, Header()]) -> DocumentId:
 
 
 @app.get("/documents/", response_model=list[Document], response_model_exclude_none=True)
-async def get_documents(x_user_id: Annotated[int, Header()]):
+async def get_documents(x_user_id: Annotated[int, Header()]) -> list[Any]:
     return store.get_all_documents(x_user_id)
 
 
 @app.get("/documents/{id}", response_model=Document, response_model_exclude_none=True)
 async def get_document(
     _id: Annotated[str, Path(alias="id")], x_user_id: Annotated[int, Header()]
-):
+) -> Any:
     try:
         return store.get_document_by_public_id(x_user_id, _id)
-    except store.DocumentNotFoundError:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+    except store.DocumentNotFoundError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND) from e
 
 
 @app.post(
@@ -43,13 +43,13 @@ async def get_document(
 )
 async def index_document(
     _id: Annotated[str, Path(alias="id")], x_user_id: Annotated[int, Header()]
-):
+) -> Any:
     try:
         return store.index_document(x_user_id, _id)
-    except store.DocumentNotFoundError:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
-    except store.AlreadyIndexedError:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST)
+    except store.DocumentNotFoundError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND) from e
+    except store.AlreadyIndexedError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST) from e
 
 
 @app.delete(
@@ -57,8 +57,8 @@ async def index_document(
 )
 async def deindex_document(
     _id: Annotated[str, Path(alias="id")], x_user_id: Annotated[int, Header()]
-):
+) -> Any:
     try:
         return store.deindex_document(x_user_id, _id)
-    except store.DocumentNotFoundError:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+    except store.DocumentNotFoundError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND) from e

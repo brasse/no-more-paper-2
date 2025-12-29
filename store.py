@@ -1,16 +1,17 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
+
 from sqlalchemy import (
-    Connection,
-    ForeignKey,
-    create_engine,
-    MetaData,
-    Table,
     Column,
-    Integer,
-    String,
-    Text,
+    Connection,
     Enum,
+    ForeignKey,
+    Integer,
+    MetaData,
+    String,
+    Table,
+    Text,
+    create_engine,
     insert,
     select,
     update,
@@ -75,7 +76,7 @@ def create_document(*, user_id: int, public_id: str) -> DocumentDb:
             user_id=user_id,
             public_id=public_id,
             state=DocumentState.DRAFT,
-            created_at=datetime.now(timezone.utc).isoformat(),
+            created_at=datetime.now(UTC).isoformat(),
         )
         .returning(*documents.c)
     )
