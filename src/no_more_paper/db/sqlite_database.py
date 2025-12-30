@@ -18,7 +18,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.dialects.sqlite import insert as sqlite_insert
 
-from no_more_paper.document import DocumentDb, DocumentState
+from no_more_paper.document import Document, DocumentState
 
 DB_PATH = Path("documents.db")
 DB_PATH.parent.mkdir(parents=True, exist_ok=True)
@@ -69,7 +69,7 @@ def init_db() -> None:
     metadata.create_all(engine)
 
 
-def create_document(*, user_id: int, public_id: str) -> DocumentDb:
+def create_document(*, user_id: int, public_id: str) -> Document:
     stmt = (
         insert(documents)
         .values(
@@ -82,10 +82,10 @@ def create_document(*, user_id: int, public_id: str) -> DocumentDb:
     )
     with engine.begin() as conn:
         row = conn.execute(stmt).mappings().one()
-    return DocumentDb.model_validate(row)
+    return Document.model_validate(row)
 
 
-def get_document_by_public_id(user_id: int, public_id: str) -> DocumentDb:
+def get_document_by_public_id(user_id: int, public_id: str) -> Document:
     stmt = select(documents).where(
         documents.c.user_id == user_id,
         documents.c.public_id == public_id,
@@ -93,16 +93,16 @@ def get_document_by_public_id(user_id: int, public_id: str) -> DocumentDb:
     with engine.connect() as conn:
         row = conn.execute(stmt).mappings().first()
     if row:
-        return DocumentDb.model_validate(row)
+        return Document.model_validate(row)
 
     raise DocumentNotFoundError()
 
 
-def get_all_documents(user_id: int) -> list[DocumentDb]:
+def get_all_documents(user_id: int) -> list[Document]:
     stmt = select(documents).where(documents.c.user_id == user_id)
     with engine.connect() as conn:
         rows = conn.execute(stmt).mappings().all()
-    return [DocumentDb.model_validate(row) for row in rows]
+    return [Document.model_validate(row) for row in rows]
 
 
 def _get_index_number(conn: Connection, user_id: int) -> int:
@@ -118,7 +118,7 @@ def _get_index_number(conn: Connection, user_id: int) -> int:
     return conn.execute(stmt).scalar_one()
 
 
-def index_document(user_id: int, public_id: str) -> DocumentDb:
+def index_document(user_id: int, public_id: str) -> Document:
     with engine.begin() as conn:
         index_number = _get_index_number(conn, user_id)
         stmt = (
@@ -133,7 +133,7 @@ def index_document(user_id: int, public_id: str) -> DocumentDb:
         )
         row = conn.execute(stmt).mappings().first()
         if row:
-            return DocumentDb.model_validate(row)
+            return Document.model_validate(row)
 
         check = conn.execute(
             select(documents.c.index_number)
@@ -147,7 +147,7 @@ def index_document(user_id: int, public_id: str) -> DocumentDb:
             raise AlreadyIndexedError()
 
 
-def deindex_document(user_id: int, public_id: str) -> DocumentDb:
+def deindex_document(user_id: int, public_id: str) -> Document:
     stmt = (
         update(documents)
         .where(
@@ -160,6 +160,6 @@ def deindex_document(user_id: int, public_id: str) -> DocumentDb:
     with engine.begin() as conn:
         row = conn.execute(stmt).mappings().first()
     if row:
-        return DocumentDb.model_validate(row)
+        return Document.model_validate(row)
 
     raise DocumentNotFoundError()

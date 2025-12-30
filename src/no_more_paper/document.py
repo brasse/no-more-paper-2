@@ -13,7 +13,7 @@ class DocumentId(BaseModel):
     public_id: str
 
 
-class Document(BaseModel):
+class DocumentOut(BaseModel):
     public_id: str
     state: DocumentState
     created_at: datetime
@@ -23,7 +23,7 @@ class Document(BaseModel):
     index_number: int | None = None
 
 
-class DocumentDb(BaseModel):
+class Document(BaseModel):
     id: int
     public_id: str
     user_id: int

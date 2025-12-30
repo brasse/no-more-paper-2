@@ -4,7 +4,7 @@ from typing import Annotated, Any
 from fastapi import APIRouter, Header, HTTPException, Path, status
 
 from no_more_paper.db import sqlite_database
-from no_more_paper.document import Document, DocumentId
+from no_more_paper.document import DocumentId, DocumentOut
 
 router = APIRouter(prefix="/documents")
 
@@ -22,12 +22,12 @@ async def create_document(x_user_id: Annotated[int, Header()]) -> DocumentId:
     return DocumentId(public_id=doc.public_id)
 
 
-@router.get("/", response_model=list[Document], response_model_exclude_none=True)
+@router.get("/", response_model=list[DocumentOut], response_model_exclude_none=True)
 async def get_documents(x_user_id: Annotated[int, Header()]) -> list[Any]:
     return sqlite_database.get_all_documents(x_user_id)
 
 
-@router.get("/{id}", response_model=Document, response_model_exclude_none=True)
+@router.get("/{id}", response_model=DocumentOut, response_model_exclude_none=True)
 async def get_document(
     _id: Annotated[str, Path(alias="id")], x_user_id: Annotated[int, Header()]
 ) -> Any:
@@ -37,7 +37,9 @@ async def get_document(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND) from e
 
 
-@router.post("/{id}/index", response_model=Document, response_model_exclude_none=True)
+@router.post(
+    "/{id}/index", response_model=DocumentOut, response_model_exclude_none=True
+)
 async def index_document(
     _id: Annotated[str, Path(alias="id")], x_user_id: Annotated[int, Header()]
 ) -> Any:
@@ -49,7 +51,9 @@ async def index_document(
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST) from e
 
 
-@router.delete("/{id}/index", response_model=Document, response_model_exclude_none=True)
+@router.delete(
+    "/{id}/index", response_model=DocumentOut, response_model_exclude_none=True
+)
 async def deindex_document(
     _id: Annotated[str, Path(alias="id")], x_user_id: Annotated[int, Header()]
 ) -> Any:
