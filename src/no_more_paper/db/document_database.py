@@ -11,9 +11,6 @@ class AlreadyIndexedError(Exception): ...
 
 class DocumentDatabase(ABC):
     @abstractmethod
-    def close(self) -> None: ...
-
-    @abstractmethod
     def create_document(self, user_id: int, public_id: str) -> Document: ...
 
     @abstractmethod

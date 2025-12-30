@@ -1,17 +1,8 @@
 from datetime import UTC, datetime
-from pathlib import Path
 
 from sqlalchemy import (
-    Column,
     Connection,
-    Enum,
-    ForeignKey,
-    Integer,
-    MetaData,
-    String,
-    Table,
-    Text,
-    create_engine,
+    Engine,
     insert,
     select,
     update,
@@ -23,49 +14,13 @@ from no_more_paper.db.document_database import (
     DocumentDatabase,
     DocumentNotFoundError,
 )
+from no_more_paper.db.sqlite.schema import document_counters, documents
 from no_more_paper.document import Document, DocumentState
-
-metadata = MetaData()
-
-documents = Table(
-    "documents",
-    metadata,
-    Column("id", Integer, primary_key=True),
-    Column("public_id", String(32), nullable=False, unique=True, index=True),
-    Column("user_id", Integer, nullable=False, index=True),
-    Column("state", Enum(DocumentState), nullable=False),
-    Column("title", Text, nullable=True),
-    Column("created_at", Text, nullable=False),
-    Column("image_url", Text, nullable=True),
-    Column("index_number", Integer, nullable=True),
-)
-
-tags = Table(
-    "tags",
-    metadata,
-    Column("document_id", Integer, ForeignKey("documents.id"), primary_key=True),
-    Column("tag", String(32), primary_key=True),
-)
-
-document_counters = Table(
-    "document_counters",
-    metadata,
-    Column("user_id", Integer, primary_key=True),
-    Column("next_index_number", Integer, nullable=False),
-)
 
 
 class SqliteDocumentDatabase(DocumentDatabase):
-    def __init__(self, db_file: Path):
-        self.engine = create_engine(
-            f"sqlite+pysqlite:///{db_file}",
-            future=True,
-            connect_args={"check_same_thread": False},  # FastAPI friendliness
-        )
-        metadata.create_all(self.engine)
-
-    def close(self) -> None:
-        self.engine.dispose()
+    def __init__(self, engine: Engine):
+        self.engine = engine
 
     def create_document(self, user_id: int, public_id: str) -> Document:
         stmt = (

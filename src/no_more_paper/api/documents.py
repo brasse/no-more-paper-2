@@ -3,8 +3,8 @@ from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, Header, HTTPException, Path, status
 
-from no_more_paper.db import sqlite_document_database
 from no_more_paper.db.document_database import DocumentDatabase
+from no_more_paper.db.sqlite import document_database
 from no_more_paper.dependencies import get_document_database
 from no_more_paper.document import DocumentId, DocumentOut
 
@@ -41,7 +41,7 @@ async def get_document(
 ) -> Any:
     try:
         return db.get_document_by_public_id(x_user_id, _id)
-    except sqlite_document_database.DocumentNotFoundError as e:
+    except document_database.DocumentNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND) from e
 
 
@@ -55,9 +55,9 @@ async def index_document(
 ) -> Any:
     try:
         return db.index_document(x_user_id, _id)
-    except sqlite_document_database.DocumentNotFoundError as e:
+    except document_database.DocumentNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND) from e
-    except sqlite_document_database.AlreadyIndexedError as e:
+    except document_database.AlreadyIndexedError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST) from e
 
 
@@ -71,5 +71,5 @@ async def deindex_document(
 ) -> Any:
     try:
         return db.deindex_document(x_user_id, _id)
-    except sqlite_document_database.DocumentNotFoundError as e:
+    except document_database.DocumentNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND) from e
