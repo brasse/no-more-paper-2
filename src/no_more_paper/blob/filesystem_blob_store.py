@@ -1,43 +1,11 @@
 import asyncio
 import re
-from abc import ABC, abstractmethod
 from pathlib import Path
+
+from no_more_paper.blob.blob_store import BlobNotFoundError, BlobStore
 
 NAME_PATTERN = re.compile(r"[a-z0-9_-]+")
 EXT_PATTERN = re.compile(r"[a-z0-9]+")
-
-
-class BlobNotFoundError(Exception): ...
-
-
-class BlobStore(ABC):
-    @abstractmethod
-    async def put(
-        self,
-        namespace: str,
-        blob_id: bytes,
-        blob: bytes,
-        *,
-        variant: str | None = None,
-        ext: str | None = None,
-    ) -> None: ...
-
-    @abstractmethod
-    async def get(
-        self,
-        namespace: str,
-        blob_id: bytes,
-        *,
-        variant: str | None = None,
-        ext: str | None = None,
-    ) -> bytes:
-        """
-        Retrieve a blob.
-
-        Raises:
-            BlobNotFoundError: if the blob does not exist.
-        """
-        ...
 
 
 class FileSystemBlobStore(BlobStore):

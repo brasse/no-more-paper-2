@@ -2,7 +2,10 @@ from pathlib import Path
 
 import pytest
 
-from no_more_paper.blob import BlobNotFoundError, FileSystemBlobStore
+from no_more_paper.blob.filesystem_blob_store import (
+    BlobNotFoundError,
+    FileSystemBlobStore,
+)
 
 
 @pytest.fixture
@@ -12,7 +15,7 @@ def store(tmp_path):
 
 @pytest.mark.asyncio
 async def test_put_and_get_default(store: FileSystemBlobStore, tmp_path: Path):
-    namespace = "ns"
+    namespace = "thumbs"
     blob_id = b"\xaa\xbb\x12\x34"
     payload = b"hello"
 
@@ -29,9 +32,9 @@ async def test_put_and_get_default(store: FileSystemBlobStore, tmp_path: Path):
 async def test_put_and_get_with_variant_and_ext(
     store: FileSystemBlobStore, tmp_path: Path
 ):
-    namespace = "ns"
+    namespace = "thumbs"
     blob_id = b"\xaa\xbb\x12\x34"
-    variant = "thumb"
+    variant = "w320"
     ext = "png"
     payload = b"hello"
 
@@ -40,13 +43,13 @@ async def test_put_and_get_with_variant_and_ext(
 
     assert blob == payload
 
-    expected_path = tmp_path / namespace / "aa" / "bb" / "aabb1234-thumb.png"
+    expected_path = tmp_path / namespace / "aa" / "bb" / "aabb1234-w320.png"
     assert expected_path.is_file()
 
 
 @pytest.mark.asyncio
-async def test_put_replaces_existing_blob(store: FileSystemBlobStore, tmp_path: Path):
-    namespace = "ns"
+async def test_put_replaces_existing_blob(store: FileSystemBlobStore):
+    namespace = "thumbs"
     blob_id = b"\xaa\xbb\x12\x34"
     payload0 = b"hello"
     payload1 = b"bye"
@@ -59,6 +62,30 @@ async def test_put_replaces_existing_blob(store: FileSystemBlobStore, tmp_path: 
 
 
 @pytest.mark.asyncio
-async def test_get_missing_blob_raises(store: FileSystemBlobStore, tmp_path: Path):
+async def test_get_missing_blob_raises(store: FileSystemBlobStore):
     with pytest.raises(BlobNotFoundError):
-        await store.get("ns", b"\x01\x02")
+        await store.get("thumbs", b"\x01\x02")
+
+
+@pytest.mark.asyncio
+async def test_malformed_namespace_raises(store: FileSystemBlobStore):
+    with pytest.raises(ValueError):
+        await store.get("THUMBS", b"\x01\x02")
+
+
+@pytest.mark.asyncio
+async def test_malformed_variant_raises(store: FileSystemBlobStore):
+    with pytest.raises(ValueError):
+        await store.get("thumbs", b"\x01\x02", variant="W320")
+
+
+@pytest.mark.asyncio
+async def test_malformed_ext_raises(store: FileSystemBlobStore):
+    with pytest.raises(ValueError):
+        await store.get("thumbs", b"\x01\x02", ext=".png")
+
+
+@pytest.mark.asyncio
+async def test_too_short_blob_id_raises(store: FileSystemBlobStore):
+    with pytest.raises(ValueError):
+        await store.get("thumbs", b"\x01")

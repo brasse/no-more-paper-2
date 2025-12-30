@@ -3,12 +3,12 @@ from typing import Annotated, Any
 
 from fastapi import APIRouter, Header, HTTPException, Path, status
 
-from no_more_paper import store
+from no_more_paper.db import sqlite_database
 from no_more_paper.document import Document, DocumentId
 
 router = APIRouter(prefix="/documents")
 
-store.init_db()
+sqlite_database.init_db()
 
 
 def base62Id(n: int) -> str:
@@ -18,13 +18,13 @@ def base62Id(n: int) -> str:
 
 @router.post("/", status_code=status.HTTP_201_CREATED)
 async def create_document(x_user_id: Annotated[int, Header()]) -> DocumentId:
-    doc = store.create_document(user_id=x_user_id, public_id=base62Id(16))
+    doc = sqlite_database.create_document(user_id=x_user_id, public_id=base62Id(16))
     return DocumentId(public_id=doc.public_id)
 
 
 @router.get("/", response_model=list[Document], response_model_exclude_none=True)
 async def get_documents(x_user_id: Annotated[int, Header()]) -> list[Any]:
-    return store.get_all_documents(x_user_id)
+    return sqlite_database.get_all_documents(x_user_id)
 
 
 @router.get("/{id}", response_model=Document, response_model_exclude_none=True)
@@ -32,8 +32,8 @@ async def get_document(
     _id: Annotated[str, Path(alias="id")], x_user_id: Annotated[int, Header()]
 ) -> Any:
     try:
-        return store.get_document_by_public_id(x_user_id, _id)
-    except store.DocumentNotFoundError as e:
+        return sqlite_database.get_document_by_public_id(x_user_id, _id)
+    except sqlite_database.DocumentNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND) from e
 
 
@@ -42,10 +42,10 @@ async def index_document(
     _id: Annotated[str, Path(alias="id")], x_user_id: Annotated[int, Header()]
 ) -> Any:
     try:
-        return store.index_document(x_user_id, _id)
-    except store.DocumentNotFoundError as e:
+        return sqlite_database.index_document(x_user_id, _id)
+    except sqlite_database.DocumentNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND) from e
-    except store.AlreadyIndexedError as e:
+    except sqlite_database.AlreadyIndexedError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST) from e
 
 
@@ -54,6 +54,6 @@ async def deindex_document(
     _id: Annotated[str, Path(alias="id")], x_user_id: Annotated[int, Header()]
 ) -> Any:
     try:
-        return store.deindex_document(x_user_id, _id)
-    except store.DocumentNotFoundError as e:
+        return sqlite_database.deindex_document(x_user_id, _id)
+    except sqlite_database.DocumentNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND) from e
