@@ -9,8 +9,19 @@ dependencies = [
     "sqlalchemy>=2.0.45",
 ]
 
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
 [tool.ruff]
 target-version = "py314"
+per-file-ignores = { "tests/**.py" = ["ANN"] }
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "B", "UP", "ANN", "FAST"]
@@ -18,3 +29,9 @@ ignore = ["ANN401"]
 
 [tool.ruff.lint.flake8-annotations]
 mypy-init-return = true
+
+[dependency-groups]
+dev = [
+    "pytest>=9.0.2",
+    "pytest-asyncio>=1.3.0",
+]
