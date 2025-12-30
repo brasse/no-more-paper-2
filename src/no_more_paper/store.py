@@ -18,7 +18,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.dialects.sqlite import insert as sqlite_insert
 
-from document import DocumentDb, DocumentState
+from no_more_paper.document import DocumentDb, DocumentState
 
 DB_PATH = Path("documents.db")
 DB_PATH.parent.mkdir(parents=True, exist_ok=True)

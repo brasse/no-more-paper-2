@@ -3,8 +3,8 @@ from typing import Annotated, Any
 
 from fastapi import FastAPI, Header, HTTPException, Path, status
 
-import store
-from document import Document, DocumentId
+from no_more_paper import store
+from no_more_paper.document import Document, DocumentId
 
 app = FastAPI()
 
